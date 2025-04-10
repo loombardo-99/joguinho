@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Game</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: url('background.gif') no-repeat center center fixed;
+            background-size: cover;
+            font-family: Arial, sans-serif;
+        }
+
+        .start-screen {
+            text-align: center;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            border-radius: 10px;
+            color: white;
+        }
+
+        .start-screen h1 {
+            margin-bottom: 20px;
+        }
+
+        .start-screen button {
+            padding: 10px 20px;
+            font-size: 18px;
+            color: white;
+            background-color: #28a745;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .start-screen button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="start-screen">
+        <h1>Snake Game</h1>
+        <button onclick="startGame()">Play</button>
+    </div>
+    <script>
+        function startGame() {
+            window.location.href = 'play.html';
+        }
+    </script>
+</body>
+</html>
