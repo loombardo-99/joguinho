@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caça Palavras</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        #game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(10, 40px);
+            gap: 5px;
+        }
+        .cell {
+            width: 40px;
+            height: 40px;
+            border: 1px solid #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            background-color: white;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .cell:hover {
+            transform: scale(1.1);
+        }
+        .selected {
+            background-color: lightblue;
+        }
+        .found {
+            background-color: lightgreen;
+            color: white;
+            font-weight: bold;
+        }
+        #controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        #pause-button {
+            background-color: #f44336;
+            color: white;
+        }
+        #pause-button:hover {
+            background-color: #e53935;
+        }
+        #next-button {
+            display: none;
+            background-color: #4caf50;
+            color: white;
+        }
+        #next-button:hover {
+            background-color: #45a049;
+        }
+        #timer {
+            font-size: 18px;
+        }
+        #word-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            font-size: 18px;
+        }
+        .word-found {
+            text-decoration: line-through;
+            color: gray;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Caça Palavras</h1>
+        <h2 id="theme">Tema: Animais</h2>
+        <div id="timer">Tempo: 0s</div>
+    </header>
+    <div id="game-container">
+        <div id="game-board"></div>
+        <div id="word-list"></div>
+        <div id="controls">
+            <button id="pause-button" onclick="togglePause()">Pausar</button>
+            <button id="next-button" onclick="nextLevel()">Próxima Fase</button>
+        </div>
+    </div>
+
+    <script>
+        const levels = [
+        { theme: "Tecnologia", words: ["COMPUTADOR", "CELULAR", "INTERNET", "ROBOTICA", "SOFTWARE"] },
+            { theme: "Animais", words: ["GATO", "CACHORRO", "PEIXE", "PATO", "CAVALO"] },
+            { theme: "Frutas", words: ["MAÇÃ", "BANANA", "UVA", "MELANCIA", "LARANJA"] },
+            { theme: "Cores", words: ["VERMELHO", "AZUL", "AMARELO", "VERDE", "ROSA"] },
+            { theme: "Países", words: ["BRASIL", "CANADÁ", "JAPÃO", "ALEMANHA", "ITÁLIA"] },
+            { theme: "Esportes", words: ["FUTEBOL", "BASQUETE", "TÊNIS", "NATAÇÃO", "VOLEI"] },
+            { theme: "Transportes", words: ["CARRO", "BICICLETA", "AVIÃO", "NAVIO", "TREM"] },
+            { theme: "Profissões", words: ["MÉDICO", "ENGENHEIRO", "ARTISTA", "PROFESSOR", "JORNALISTA"] },
+            { theme: "Objetos", words: ["LIVRO", "CANETA", "CELULAR", "COMPUTADOR", "MESA"] },
+            { theme: "Músicas", words: ["ROCK", "POP", "JAZZ", "CLASSICAL", "BLUES"] },
+            { theme: "Filmes", words: ["AÇÃO", "DRAMA", "COMÉDIA", "TERROR", "ROMANCE"] },
+            { theme: "Comidas", words: ["PIZZA", "LASANHA", "HAMBURGUER", "SORVETE", "CHOCOLATE"] },
+            { theme: "Instrumentos", words: ["VIOLÃO", "PIANO", "BATERIA", "FLAUTA", "VIOLINO"] },
+            { theme: "Planetas", words: ["TERRA", "MARTE", "JÚPITER", "SATURNO", "VÊNUS"] }
+        ];
+
+        let currentLevel = 0;
+        let foundWords = [];
+        let selectedCells = [];
+        let timer = 0;
+        let timerInterval;
+        let isPaused = false;
+
+        function startTimer() {
+            timer = 0;
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (!isPaused) {
+                    timer++;
+                    document.getElementById("timer").textContent = `Tempo: ${timer}s`;
+                }
+            }, 1000);
+        }
+
+        function togglePause() {
+            isPaused = !isPaused;
+            document.getElementById("pause-button").textContent = isPaused ? "Continuar" : "Pausar";
+        }
+
+        function createBoard() {
+            const board = document.getElementById("game-board");
+            board.innerHTML = "";
+            foundWords = [];
+            selectedCells = [];
+            const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            const level = levels[currentLevel];
+            const grid = Array(10).fill(null).map(() => Array(10).fill(null));
+
+            level.words.forEach(word => {
+                let placed = false;
+                while (!placed) {
+                    const direction = Math.random() > 0.5 ? "horizontal" : "vertical";
+                    const row = Math.floor(Math.random() * 10);
+                    const col = Math.floor(Math.random() * 10);
+                    if (direction === "horizontal" && col + word.length <= 10) {
+                        if (grid[row].slice(col, col + word.length).every(cell => cell === null)) {
+                            for (let i = 0; i < word.length; i++) {
+                                grid[row][col + i] = word[i];
+                            }
+                            placed = true;
+                        }
+                    } else if (direction === "vertical" && row + word.length <= 10) {
+                        if (grid.slice(row, row + word.length).every(row => row[col] === null)) {
+                            for (let i = 0; i < word.length; i++) {
+                                grid[row + i][col] = word[i];
+                            }
+                            placed = true;
+                        }
+                    }
+                }
+            });
+
+            for (let i = 0; i < 10; i++) {
+                for (let j = 0; j < 10; j++) {
+                    if (grid[i][j] === null) {
+                        grid[i][j] = letters[Math.floor(Math.random() * letters.length)];
+                    }
+                }
+            }
+
+            grid.forEach((row, rowIndex) => {
+                row.forEach((letter, colIndex) => {
+                    const cell = document.createElement("div");
+                    cell.className = "cell";
+                    cell.textContent = letter;
+                    cell.dataset.row = rowIndex;
+                    cell.dataset.col = colIndex;
+                    cell.onclick = () => selectCell(cell, letter);
+                    board.appendChild(cell);
+                });
+            });
+
+            document.getElementById("theme").textContent = `Tema: ${level.theme}`;
+            renderWordList(level.words);
+            startTimer();
+        }
+
+        function renderWordList(words) {
+            const wordList = document.getElementById("word-list");
+            wordList.innerHTML = "";
+            words.forEach(word => {
+                const wordElement = document.createElement("div");
+                wordElement.textContent = word;
+                wordElement.id = `word-${word}`;
+                wordList.appendChild(wordElement);
+            });
+        }
+
+        function selectCell(cell, letter) {
+            if (cell.classList.contains("found") || cell.classList.contains("selected")) return;
+
+            cell.classList.add("selected");
+            selectedCells.push(cell);
+
+            const selectedWord = selectedCells.map(c => c.textContent).join("");
+            const level = levels[currentLevel];
+
+            if (level.words.includes(selectedWord)) {
+                selectedCells.forEach(c => c.classList.add("found"));
+                foundWords.push(selectedWord);
+                document.getElementById(`word-${selectedWord}`).classList.add("word-found");
+                selectedCells = [];
+                if (foundWords.length === level.words.length) {
+                    clearInterval(timerInterval);
+                    document.getElementById("next-button").style.display = "block";
+                }
+            } else if (!level.words.some(word => word.startsWith(selectedWord))) {
+                selectedCells.forEach(c => c.classList.remove("selected"));
+                selectedCells = [];
+            }
+        }
+
+        function nextLevel() {
+            currentLevel++;
+            if (currentLevel < levels.length) {
+                createBoard();
+                document.getElementById("next-button").style.display = "none";
+            } else {
+                alert(`Parabéns! Você completou todas as fases em ${timer}s!`);
+            }
+        }
+
+        createBoard();
+    </script>
+</body>
+</html>
