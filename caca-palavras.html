@@ -1,146 +1,294 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Caça Palavras</title>
+    <title>Caça Palavras Aprimorado</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f9;
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Cor de fundo suave */
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 25px;
+            max-width: 90%;
         }
         header {
             text-align: center;
             margin-bottom: 20px;
         }
-        #game-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-        }
         #game-board {
             display: grid;
-            grid-template-columns: repeat(10, 40px);
-            gap: 5px;
+            grid-template-columns: repeat(10, minmax(35px, 1fr)); /* Ajuste para responsividade */
+            gap: 4px;
+            border: 2px solid #cbd5e0; /* Borda sutil */
+            border-radius: 10px;
+            padding: 5px;
+            background-color: #e2e8f0; /* Fundo do tabuleiro */
         }
         .cell {
-            width: 40px;
-            height: 40px;
-            border: 1px solid #ccc;
+            width: 100%; /* Ocupa a largura total da coluna */
+            padding-top: 100%; /* Mantém a proporção quadrada */
+            position: relative;
+            border: 1px solid #a0aec0;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             user-select: none;
-            background-color: white;
-            transition: background-color 0.3s, transform 0.2s;
+            background-color: #ffffff;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            font-weight: bold;
+            color: #2d3748;
+            border-radius: 5px;
+            font-size: clamp(0.8rem, 3vw, 1.2rem); /* Tamanho de fonte responsivo */
+        }
+        .cell span {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .cell:hover {
-            transform: scale(1.1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
         }
         .selected {
-            background-color: lightblue;
+            background-color: #90cdf4; /* Azul claro */
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(144, 205, 244, 0.7);
         }
         .found {
-            background-color: lightgreen;
+            background-color: #68d391; /* Verde vibrante */
             color: white;
             font-weight: bold;
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(104, 211, 145, 0.7);
         }
         #controls {
             display: flex;
-            gap: 10px;
+            gap: 15px;
             justify-content: center;
+            flex-wrap: wrap; /* Quebra de linha para botões em telas pequenas */
         }
         button {
-            padding: 10px 20px;
-            font-size: 16px;
+            padding: 12px 25px;
+            font-size: 17px;
             cursor: pointer;
             border: none;
-            border-radius: 5px;
-            transition: background-color 0.3s;
+            border-radius: 8px;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
         #pause-button {
-            background-color: #f44336;
+            background-color: #fc8181; /* Vermelho suave */
             color: white;
         }
         #pause-button:hover {
-            background-color: #e53935;
+            background-color: #e53e3e;
+            transform: translateY(-1px);
         }
         #next-button {
             display: none;
-            background-color: #4caf50;
+            background-color: #63b3ed; /* Azul vibrante */
             color: white;
         }
         #next-button:hover {
-            background-color: #45a049;
+            background-color: #4299e1;
+            transform: translateY(-1px);
         }
-        #timer {
-            font-size: 18px;
+        #restart-button {
+            background-color: #ecc94b; /* Amarelo suave */
+            color: white;
+        }
+        #restart-button:hover {
+            background-color: #d69e2e;
+            transform: translateY(-1px);
+        }
+        #timer, #level-info {
+            font-size: 20px;
+            font-weight: bold;
+            color: #4a5568;
         }
         #word-list {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 10px;
+            gap: 12px;
             font-size: 18px;
+            color: #2d3748;
+            padding: 10px;
+            border: 1px dashed #cbd5e0;
+            border-radius: 10px;
+            background-color: #f7fafc;
+        }
+        .word-item {
+            padding: 5px 10px;
+            border-radius: 5px;
+            background-color: #edf2f7;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
         .word-found {
             text-decoration: line-through;
-            color: gray;
+            color: #a0aec0;
+            background-color: #e2e8f0;
+        }
+        #message-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #4a5568;
+            color: white;
+            padding: 25px 35px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            display: none;
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+        }
+        #message-box button {
+            margin-top: 20px;
+            background-color: #63b3ed;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+        #message-box button:hover {
+            background-color: #4299e1;
+        }
+
+        /* Responsividade para telas menores */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                gap: 20px;
+            }
+            #game-board {
+                grid-template-columns: repeat(10, minmax(28px, 1fr));
+                gap: 3px;
+            }
+            .cell {
+                font-size: clamp(0.7rem, 4vw, 1rem);
+            }
+            #timer, #level-info {
+                font-size: 18px;
+            }
+            #word-list {
+                font-size: 16px;
+                gap: 8px;
+            }
+            button {
+                padding: 10px 20px;
+                font-size: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #game-board {
+                grid-template-columns: repeat(10, minmax(25px, 1fr));
+                gap: 2px;
+            }
+            .cell {
+                font-size: clamp(0.6rem, 5vw, 0.9rem);
+            }
+            #word-list {
+                font-size: 14px;
+            }
+            button {
+                width: 100%; /* Botões ocupam largura total em telas muito pequenas */
+            }
         }
     </style>
 </head>
 <body>
-    <header>
-        <h1>Caça Palavras</h1>
-        <h2 id="theme">Tema: Animais</h2>
-        <div id="timer">Tempo: 0s</div>
-    </header>
-    <div id="game-container">
-        <div id="game-board"></div>
-        <div id="word-list"></div>
-        <div id="controls">
-            <button id="pause-button" onclick="togglePause()">Pausar</button>
-            <button id="next-button" onclick="nextLevel()">Próxima Fase</button>
+    <div class="container">
+        <header class="text-center">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">Caça Palavras</h1>
+            <h2 id="level-info" class="text-xl text-gray-700 mb-2">Nível: 1 - Tema: Animais</h2>
+            <div id="timer" class="text-lg text-gray-600">Tempo: 0s</div>
+        </header>
+        <div id="game-container" class="flex flex-col items-center gap-6">
+            <div id="game-board"></div>
+            <div id="word-list" class="flex flex-wrap justify-center gap-3 text-lg text-gray-800"></div>
+            <div id="controls" class="flex gap-4 justify-center flex-wrap">
+                <button id="pause-button" onclick="togglePause()" class="bg-red-400 hover:bg-red-500 text-white font-bold py-3 px-6 rounded-lg shadow-md">Pausar</button>
+                <button id="next-button" onclick="nextLevel()" class="bg-blue-400 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-lg shadow-md hidden">Próxima Fase</button>
+                <button id="restart-button" onclick="restartGame()" class="bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-3 px-6 rounded-lg shadow-md">Reiniciar Jogo</button>
+            </div>
         </div>
     </div>
 
+    <div id="message-box" class="hidden">
+        <p id="message-content"></p>
+        <button onclick="hideMessageBox()">OK</button>
+    </div>
+
     <script>
+        // Definição dos níveis do jogo, com temas e palavras
         const levels = [
-        { theme: "Tecnologia", words: ["COMPUTADOR", "CELULAR", "INTERNET", "ROBOTICA", "SOFTWARE"] },
-            { theme: "Animais", words: ["GATO", "CACHORRO", "PEIXE", "PATO", "CAVALO"] },
-            { theme: "Frutas", words: ["MAÇÃ", "BANANA", "UVA", "MELANCIA", "LARANJA"] },
-            { theme: "Cores", words: ["VERMELHO", "AZUL", "AMARELO", "VERDE", "ROSA"] },
-            { theme: "Países", words: ["BRASIL", "CANADÁ", "JAPÃO", "ALEMANHA", "ITÁLIA"] },
-            { theme: "Esportes", words: ["FUTEBOL", "BASQUETE", "TÊNIS", "NATAÇÃO", "VOLEI"] },
-            { theme: "Transportes", words: ["CARRO", "BICICLETA", "AVIÃO", "NAVIO", "TREM"] },
-            { theme: "Profissões", words: ["MÉDICO", "ENGENHEIRO", "ARTISTA", "PROFESSOR", "JORNALISTA"] },
-            { theme: "Objetos", words: ["LIVRO", "CANETA", "CELULAR", "COMPUTADOR", "MESA"] },
-            { theme: "Músicas", words: ["ROCK", "POP", "JAZZ", "CLASSICAL", "BLUES"] },
-            { theme: "Filmes", words: ["AÇÃO", "DRAMA", "COMÉDIA", "TERROR", "ROMANCE"] },
-            { theme: "Comidas", words: ["PIZZA", "LASANHA", "HAMBURGUER", "SORVETE", "CHOCOLATE"] },
-            { theme: "Instrumentos", words: ["VIOLÃO", "PIANO", "BATERIA", "FLAUTA", "VIOLINO"] },
-            { theme: "Planetas", words: ["TERRA", "MARTE", "JÚPITER", "SATURNO", "VÊNUS"] }
+            { theme: "Animais", words: ["GATO", "CACHORRO", "PEIXE", "PATO", "CAVALO", "LEAO", "TIGRE", "ELEFANTE", "COELHO", "URSO"] },
+            { theme: "Frutas", words: ["MAÇA", "BANANA", "UVA", "MELANCIA", "LARANJA", "ABACAXI", "MORANGO", "PERA", "KIWI", "MANGA"] },
+            { theme: "Cores", words: ["VERMELHO", "AZUL", "AMARELO", "VERDE", "ROSA", "ROXO", "LARANJA", "PRETO", "BRANCO", "CINZA"] },
+            { theme: "Países", words: ["BRASIL", "CANADA", "JAPAO", "ALEMANHA", "ITALIA", "FRANCA", "ESPANHA", "MEXICO", "INDIA", "CHINA"] },
+            { theme: "Esportes", words: ["FUTEBOL", "BASQUETE", "TENIS", "NATACAO", "VOLEI", "RUGBY", "GOLFE", "CICLISMO", "BOXE", "JUDO"] },
+            { theme: "Transportes", words: ["CARRO", "BICICLETA", "AVIAO", "NAVIO", "TREM", "ONIBUS", "MOTO", "METRO", "HELICOPTERO", "BARCO"] },
+            { theme: "Profissões", words: ["MEDICO", "ENGENHEIRO", "ARTISTA", "PROFESSOR", "JORNALISTA", "COZINHEIRO", "POLICIAL", "BOMBEIRO", "ARQUITETO", "DENTISTA"] },
+            { theme: "Objetos", words: ["LIVRO", "CANETA", "CELULAR", "COMPUTADOR", "MESA", "CADEIRA", "JANELA", "PORTA", "ESPELHO", "RELOGIO"] },
+            { theme: "Músicas", words: ["ROCK", "POP", "JAZZ", "CLASSICAL", "BLUES", "SAMBA", "FORRO", "SERTANEJO", "FUNK", "REGGAE"] },
+            { theme: "Filmes", words: ["ACAO", "DRAMA", "COMEDIA", "TERROR", "ROMANCE", "FICCAO", "ANIMACAO", "DOCUMENTARIO", "AVENTURA", "SUSPENSE"] }
         ];
 
-        let currentLevel = 0;
-        let foundWords = [];
-        let selectedCells = [];
-        let timer = 0;
-        let timerInterval;
-        let isPaused = false;
+        let currentLevel = 0; // Nível atual do jogo
+        let foundWords = []; // Palavras encontradas no nível atual
+        let selectedCells = []; // Células selecionadas atualmente pelo jogador
+        let timer = 0; // Tempo decorrido no nível atual
+        let timerInterval; // ID do intervalo do timer
+        let isPaused = false; // Estado de pausa do jogo
 
+        // Função para exibir mensagens personalizadas (substitui alert())
+        function showMessageBox(message) {
+            document.getElementById("message-content").textContent = message;
+            document.getElementById("message-box").classList.remove("hidden");
+        }
+
+        // Função para esconder a caixa de mensagens
+        function hideMessageBox() {
+            document.getElementById("message-box").classList.add("hidden");
+        }
+
+        // Inicia ou reinicia o timer do jogo
         function startTimer() {
             timer = 0;
-            clearInterval(timerInterval);
+            clearInterval(timerInterval); // Limpa qualquer timer anterior
             timerInterval = setInterval(() => {
                 if (!isPaused) {
                     timer++;
@@ -149,35 +297,63 @@
             }, 1000);
         }
 
+        // Alterna o estado de pausa do jogo
         function togglePause() {
             isPaused = !isPaused;
-            document.getElementById("pause-button").textContent = isPaused ? "Continuar" : "Pausar";
+            const pauseButton = document.getElementById("pause-button");
+            pauseButton.textContent = isPaused ? "Continuar" : "Pausar";
+            if (isPaused) {
+                showMessageBox("Jogo Pausado!");
+            } else {
+                hideMessageBox();
+            }
         }
 
+        // Reinicia o jogo para o primeiro nível
+        function restartGame() {
+            currentLevel = 0;
+            foundWords = [];
+            selectedCells = [];
+            isPaused = false;
+            document.getElementById("pause-button").textContent = "Pausar";
+            createBoard(); // Recria o tabuleiro para o primeiro nível
+            document.getElementById("next-button").classList.add("hidden"); // Esconde o botão de próxima fase
+            hideMessageBox(); // Esconde qualquer mensagem
+        }
+
+        // Cria o tabuleiro do jogo e preenche com letras
         function createBoard() {
             const board = document.getElementById("game-board");
-            board.innerHTML = "";
+            board.innerHTML = ""; // Limpa o tabuleiro anterior
             foundWords = [];
             selectedCells = [];
             const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
             const level = levels[currentLevel];
-            const grid = Array(10).fill(null).map(() => Array(10).fill(null));
+            const gridSize = 10; // Tamanho do grid (10x10)
+            const grid = Array(gridSize).fill(null).map(() => Array(gridSize).fill(null));
 
+            // Atualiza as informações de nível e tema
+            document.getElementById("level-info").textContent = `Nível: ${currentLevel + 1} - Tema: ${level.theme}`;
+
+            // Posiciona as palavras no grid
             level.words.forEach(word => {
                 let placed = false;
                 while (!placed) {
                     const direction = Math.random() > 0.5 ? "horizontal" : "vertical";
-                    const row = Math.floor(Math.random() * 10);
-                    const col = Math.floor(Math.random() * 10);
-                    if (direction === "horizontal" && col + word.length <= 10) {
+                    const row = Math.floor(Math.random() * gridSize);
+                    const col = Math.floor(Math.random() * gridSize);
+
+                    if (direction === "horizontal" && col + word.length <= gridSize) {
+                        // Verifica se o espaço está livre para a palavra horizontal
                         if (grid[row].slice(col, col + word.length).every(cell => cell === null)) {
                             for (let i = 0; i < word.length; i++) {
                                 grid[row][col + i] = word[i];
                             }
                             placed = true;
                         }
-                    } else if (direction === "vertical" && row + word.length <= 10) {
-                        if (grid.slice(row, row + word.length).every(row => row[col] === null)) {
+                    } else if (direction === "vertical" && row + word.length <= gridSize) {
+                        // Verifica se o espaço está livre para a palavra vertical
+                        if (grid.slice(row, row + word.length).every(r => r[col] === null)) {
                             for (let i = 0; i < word.length; i++) {
                                 grid[row + i][col] = word[i];
                             }
@@ -187,19 +363,21 @@
                 }
             });
 
-            for (let i = 0; i < 10; i++) {
-                for (let j = 0; j < 10; j++) {
+            // Preenche os espaços vazios com letras aleatórias
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
                     if (grid[i][j] === null) {
                         grid[i][j] = letters[Math.floor(Math.random() * letters.length)];
                     }
                 }
             }
 
+            // Renderiza as células no tabuleiro
             grid.forEach((row, rowIndex) => {
                 row.forEach((letter, colIndex) => {
                     const cell = document.createElement("div");
                     cell.className = "cell";
-                    cell.textContent = letter;
+                    cell.innerHTML = `<span>${letter}</span>`; // Usa span para centralizar o texto
                     cell.dataset.row = rowIndex;
                     cell.dataset.col = colIndex;
                     cell.onclick = () => selectCell(cell, letter);
@@ -207,23 +385,26 @@
                 });
             });
 
-            document.getElementById("theme").textContent = `Tema: ${level.theme}`;
-            renderWordList(level.words);
-            startTimer();
+            renderWordList(level.words); // Renderiza a lista de palavras
+            startTimer(); // Inicia o timer
         }
 
+        // Renderiza a lista de palavras a serem encontradas
         function renderWordList(words) {
             const wordList = document.getElementById("word-list");
-            wordList.innerHTML = "";
+            wordList.innerHTML = ""; // Limpa a lista anterior
             words.forEach(word => {
                 const wordElement = document.createElement("div");
                 wordElement.textContent = word;
                 wordElement.id = `word-${word}`;
+                wordElement.className = "word-item";
                 wordList.appendChild(wordElement);
             });
         }
 
+        // Lógica para selecionar uma célula no tabuleiro
         function selectCell(cell, letter) {
+            if (isPaused) return; // Não permite seleção se o jogo estiver pausado
             if (cell.classList.contains("found") || cell.classList.contains("selected")) return;
 
             cell.classList.add("selected");
@@ -232,31 +413,40 @@
             const selectedWord = selectedCells.map(c => c.textContent).join("");
             const level = levels[currentLevel];
 
+            // Verifica se a palavra selecionada é uma das palavras do nível
             if (level.words.includes(selectedWord)) {
                 selectedCells.forEach(c => c.classList.add("found"));
                 foundWords.push(selectedWord);
                 document.getElementById(`word-${selectedWord}`).classList.add("word-found");
-                selectedCells = [];
+                selectedCells = []; // Limpa as células selecionadas
                 if (foundWords.length === level.words.length) {
-                    clearInterval(timerInterval);
-                    document.getElementById("next-button").style.display = "block";
+                    // Todas as palavras foram encontradas
+                    clearInterval(timerInterval); // Para o timer
+                    document.getElementById("next-button").classList.remove("hidden"); // Mostra o botão de próxima fase
+                    showMessageBox(`Parabéns! Você completou o nível ${currentLevel + 1} em ${timer}s!`);
                 }
             } else if (!level.words.some(word => word.startsWith(selectedWord))) {
+                // Se a palavra selecionada não é o início de nenhuma palavra válida, deseleciona
                 selectedCells.forEach(c => c.classList.remove("selected"));
                 selectedCells = [];
             }
         }
 
+        // Avança para o próximo nível
         function nextLevel() {
             currentLevel++;
             if (currentLevel < levels.length) {
-                createBoard();
-                document.getElementById("next-button").style.display = "none";
+                createBoard(); // Cria o tabuleiro para o novo nível
+                document.getElementById("next-button").classList.add("hidden"); // Esconde o botão de próxima fase
+                hideMessageBox(); // Esconde qualquer mensagem
             } else {
-                alert(`Parabéns! Você completou todas as fases em ${timer}s!`);
+                // Todas as fases foram completadas
+                showMessageBox(`Parabéns! Você completou todas as ${levels.length} fases em ${timer}s!`);
+                document.getElementById("next-button").classList.add("hidden"); // Esconde o botão de próxima fase
             }
         }
 
+        // Inicializa o jogo ao carregar a página
         createBoard();
     </script>
 </body>

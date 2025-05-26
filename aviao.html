@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simulador de Pássaro 2D Aprimorado para Usabilidade</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #87CEEB; /* Cor do céu */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+            touch-action: none; /* Previne o zoom da página ao tocar */
+        }
+        #game-container {
+            position: relative;
+            text-align: center;
+            background-color: #ADD8E6; /* Céu mais claro para o 2D */
+            border: 2px solid #000;
+            border-radius: 10px;
+            overflow: hidden; /* Garante que elementos fora do canvas não apareçam */
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            width: 95vw; /* Ocupa a maior parte da largura da viewport */
+            height: 95vh; /* Ocupa a maior parte da altura da viewport */
+            max-width: 800px; /* Limite máximo para telas grandes */
+            max-height: 600px; /* Limite máximo para telas grandes */
+        }
+        canvas {
+            display: block;
+            width: 100%; /* Ocupa 100% da largura do container */
+            height: auto; /* Altura automática para manter proporção */
+            border-radius: 8px;
+            background-color: #ADD8E6; /* Céu mais claro para o 2D */
+        }
+        #message-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 25px 40px;
+            border-radius: 15px;
+            font-size: 1.5em;
+            font-weight: bold;
+            display: none;
+            z-index: 100;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+        #message-box button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-top: 20px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        #message-box button:hover {
+            background-color: #45a049;
+            transform: translateY(-2px);
+        }
+        .info-box {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            z-index: 10;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        #score-box {
+            top: 10px;
+            left: 10px;
+        }
+        #coins-box {
+            top: 10px;
+            right: 10px;
+        }
+        #controls-box {
+            bottom: 10px;
+            left: 10px;
+            font-size: 0.9em;
+            text-align: left;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        #controls-box p {
+            margin: 5px 0;
+        }
+
+        /* Botões de Ação */
+        .action-button {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #3182CE; /* Azul para Start/Resume */
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            z-index: 50;
+        }
+        .action-button:hover {
+            background-color: #2b6cb0;
+            transform: translateX(-50%) translateY(-2px);
+        }
+        #pause-button {
+            background-color: #DD6B20; /* Laranja para Pausar */
+            left: auto;
+            right: 20px;
+            transform: none; /* Remove a transformação para centralizar */
+            bottom: 20px; /* Alinha com o fundo */
+            font-size: 1em;
+            padding: 10px 20px;
+        }
+        #pause-button:hover {
+            background-color: #c05621;
+            transform: translateY(-2px);
+        }
+
+        /* Responsividade para telas menores */
+        @media (max-width: 768px) {
+            .info-box {
+                font-size: 0.9em;
+                padding: 8px 12px;
+            }
+            #message-box {
+                font-size: 1.2em;
+                padding: 20px 30px;
+            }
+            #message-box button {
+                padding: 10px 20px;
+                font-size: 0.8em;
+            }
+            #controls-box {
+                display: none; /* Esconde controles de teclado em telas pequenas */
+            }
+            .action-button {
+                font-size: 1em;
+                padding: 12px 25px;
+                bottom: 15px;
+            }
+            #pause-button {
+                font-size: 0.9em;
+                padding: 8px 15px;
+                right: 15px;
+                bottom: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .info-box {
+                font-size: 0.8em;
+                padding: 6px 10px;
+            }
+            #message-box {
+                font-size: 1em;
+                padding: 15px 25px;
+            }
+            #message-box button {
+                padding: 8px 15px;
+                font-size: 0.7em;
+            }
+            .action-button {
+                font-size: 0.9em;
+                padding: 10px 20px;
+                bottom: 10px;
+            }
+            #pause-button {
+                font-size: 0.8em;
+                padding: 6px 12px;
+                right: 10px;
+                bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+
+        <div id="message-box"></div>
+
+        <div id="score-box" class="info-box">Pontuação: 0</div>
+        <div id="coins-box" class="info-box">Moedas: 0</div>
+        <div id="controls-box" class="info-box">
+            <p>Controles:</p>
+            <p>Setas: Mover (Desktop)</p>
+            <p>Toque na tela: Subir (Celular)</p>
+            <p>R: Reiniciar</p>
+        </div>
+
+        <button id="start-button" class="action-button">Começar Jogo</button>
+        <button id="pause-resume-button" class="action-button" style="display: none;">Pausar</button>
+    </div>
+
+    <script>
+        // --- Variáveis do Jogo ---
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const messageBox = document.getElementById('message-box');
+        const scoreBox = document.getElementById('score-box');
+        const coinsBox = document.getElementById('coins-box');
+        const startButton = document.getElementById('start-button');
+        const pauseResumeButton = document.getElementById('pause-resume-button');
+
+        // Estados do Jogo: 'start', 'playing', 'paused', 'gameOver'
+        let gameState = 'start';
+
+        let airplane = {
+            x: 50,
+            y: 0, // Será ajustado no window.onload
+            width: 50, /* Tamanho do pássaro SVG */
+            height: 40, /* Tamanho do pássaro SVG */
+            verticalSpeed: 0, // Velocidade vertical do pássaro
+            flapStrength: -7, // Força do "flap" (subida)
+            gravity: 0.4, // Força da gravidade
+            isSpeedBoosted: false,
+            speedBoostTimer: null,
+            rotation: 0 // Rotação do pássaro
+        };
+
+        let obstacles = [];
+        let coins = []; // Array para armazenar as moedas
+        let powerUps = []; // Array para armazenar os power-ups (estrelas)
+
+        const obstacleWidth = 30;
+        const obstacleMinHeight = 50;
+        const obstacleMaxHeight = 200;
+        let obstacleSpeed = 3; // Velocidade inicial dos obstáculos
+        let obstacleGap = 150; // Espaço inicial entre a parte de cima e de baixo do obstáculo
+        let obstacleSpawnRate = 1500; // Tempo em ms para spawnar um novo obstáculo
+        let lastObstacleTime = 0;
+
+        const coinSize = 25; /* Tamanho das moedas SVG */
+        const coinSpawnChance = 0.3; // 30% de chance de spawnar uma moeda com um obstáculo
+
+        const powerUpSize = 30; /* Tamanho do power-up SVG */
+        const powerUpSpawnChance = 0.1; /* 10% de chance de spawnar um power-up */
+        const speedBoostDuration = 3000; /* Duração do speed boost em ms */
+
+        let score = 0;
+        let totalCoins = 0; // Contador de moedas
+        let gameLoopId; // Para armazenar o ID do requestAnimationFrame
+
+        const keys = {}; // Para controles de teclado
+        let isTouching = false; // Estado do toque na tela
+
+        // SVG do Pássaro (mais amigável)
+        const birdSVG = `
+            <svg width="50" height="40" viewBox="0 0 50 40" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10 20C10 10 20 5 30 5C40 5 40 15 45 20C40 25 40 35 30 35C20 35 10 30 10 20Z" fill="#FFD700"/>
+                <path d="M30 10L40 15L30 20L40 25L30 30Z" fill="#FFA500"/>
+                <circle cx="20" cy="15" r="4" fill="#000000"/>
+                <circle cx="20" cy="15" r="1.5" fill="#FFFFFF"/>
+                <path d="M45 20L50 18L45 22Z" fill="#FF4500"/>
+            </svg>
+        `;
+
+        // SVG da Moeda
+        const coinSVG = `
+            <svg width="25" height="25" viewBox="0 0 25 25" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12.5" cy="12.5" r="10" fill="#FFD700" stroke="#DAA520" stroke-width="2"/>
+                <text x="12.5" y="15" font-family="Arial, sans-serif" font-size="12" fill="#DAA520" text-anchor="middle" font-weight="bold">$</text>
+            </svg>
+        `;
+
+        // SVG da Estrela (Power-up)
+        const starSVG = `
+            <svg width="30" height="30" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
+                <polygon points="15,0 19,10 30,11 22,18 24,28 15,22 6,28 8,18 0,11 11,10" fill="#FFD700" stroke="#DAA520" stroke-width="1"/>
+            </svg>
+        `;
+
+        // Função para carregar SVG como imagem
+        function loadImageFromSVG(svgString, width, height) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.src = 'data:image/svg+xml;base64,' + btoa(svgString);
+                img.width = width;
+                img.height = height;
+            });
+        }
+
+        let birdImage; // Variável para a imagem do pássaro
+        let coinImage;
+        let starImage;
+
+        // --- Configuração Inicial (ajustada para ser responsiva) ---
+        async function setCanvasSize() {
+            // Define o tamanho do container do jogo para ocupar a maior parte da tela
+            const gameContainer = document.getElementById('game-container');
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+
+            // Ajusta o tamanho do container para ser responsivo
+            gameContainer.style.width = `${Math.min(viewportWidth * 0.95, 800)}px`;
+            gameContainer.style.height = `${Math.min(viewportHeight * 0.95, 600)}px`;
+
+            // O canvas preenche o container
+            canvas.width = gameContainer.clientWidth - 20; // Subtrai o padding do container
+            canvas.height = gameContainer.clientHeight - 20; // Subtrai o padding do container
+
+            airplane.y = canvas.height / 2; // Centraliza o pássaro verticalmente
+
+            // Carrega as imagens SVG
+            birdImage = await loadImageFromSVG(birdSVG, airplane.width, airplane.height);
+            coinImage = await loadImageFromSVG(coinSVG, coinSize, coinSize);
+            starImage = await loadImageFromSVG(starSVG, powerUpSize, powerUpSize);
+        }
+
+        // --- Funções de Desenho ---
+        function drawBird() {
+            if (birdImage) {
+                ctx.save(); // Salva o estado atual do contexto
+                ctx.translate(airplane.x, airplane.y); // Move a origem para o centro do pássaro
+                ctx.rotate(airplane.rotation); // Rotaciona o contexto
+                ctx.drawImage(birdImage, -airplane.width / 2, -airplane.height / 2, airplane.width, airplane.height);
+                ctx.restore(); // Restaura o estado anterior do contexto
+            }
+        }
+
+        function drawObstacle(obstacle) {
+            ctx.fillStyle = '#008000'; // Verde
+            // Parte de cima do obstáculo
+            ctx.fillRect(obstacle.x, 0, obstacleWidth, obstacle.gapTop);
+            // Parte de baixo do obstáculo
+            ctx.fillRect(obstacle.x, obstacle.gapBottom, obstacleWidth, canvas.height - obstacle.gapBottom);
+        }
+
+        function drawCoin(coin) {
+            if (coinImage) {
+                ctx.drawImage(coinImage, coin.x, coin.y, coinSize, coinSize);
+            }
+        }
+
+        function drawPowerUp(powerUp) {
+            if (starImage) {
+                ctx.drawImage(starImage, powerUp.x, powerUp.y, powerUpSize, powerUpSize);
+            }
+        }
+
+        function updateScoreDisplay() {
+            scoreBox.textContent = `Pontuação: ${score}`;
+        }
+
+        function updateCoinsDisplay() {
+            coinsBox.textContent = `Moedas: ${totalCoins}`;
+        }
+
+        function showMessageBox(message, buttonText = "OK", action = null) {
+            messageBox.innerHTML = `<p>${message}</p><button>${buttonText}</button>`;
+            messageBox.querySelector('button').onclick = () => {
+                hideMessageBox();
+                if (action) action();
+            };
+            messageBox.style.display = 'block';
+        }
+
+        function hideMessageBox() {
+            messageBox.style.display = 'none';
+        }
+
+        // --- Funções de Lógica do Jogo ---
+        function update() {
+            if (gameState !== 'playing') return;
+
+            // Aplica gravidade
+            airplane.verticalSpeed += airplane.gravity;
+
+            // Atualiza a posição vertical do pássaro
+            airplane.y += airplane.verticalSpeed;
+
+            // Limita o pássaro dentro da tela
+            airplane.y = Math.max(airplane.height / 2, Math.min(canvas.height - airplane.height / 2, airplane.y));
+
+            // Atualiza a rotação do pássaro com base na velocidade vertical
+            airplane.rotation = Math.min(Math.PI / 4, Math.max(-Math.PI / 4, airplane.verticalSpeed * 0.05)); // Limita a rotação entre -45 e +45 graus
+
+            // Movimento dos obstáculos
+            for (let i = 0; i < obstacles.length; i++) {
+                let currentObstacleSpeed = obstacleSpeed;
+                if (airplane.isSpeedBoosted) {
+                    currentObstacleSpeed *= 1.5; // Aumenta a velocidade dos obstáculos durante o boost
+                }
+                obstacles[i].x -= currentObstacleSpeed;
+            }
+
+            // Movimento das moedas
+            for (let i = 0; i < coins.length; i++) {
+                let currentCoinSpeed = obstacleSpeed;
+                if (airplane.isSpeedBoosted) {
+                    currentCoinSpeed *= 1.5;
+                }
+                coins[i].x -= currentCoinSpeed;
+            }
+
+            // Movimento dos power-ups
+            for (let i = 0; i < powerUps.length; i++) {
+                let currentPowerUpSpeed = obstacleSpeed;
+                if (airplane.isSpeedBoosted) {
+                    currentPowerUpSpeed *= 1.5;
+                }
+                powerUps[i].x -= currentPowerUpSpeed;
+            }
+
+            // Remove obstáculos, moedas e power-ups fora da tela
+            obstacles = obstacles.filter(obstacle => {
+                if (obstacle.x + obstacleWidth < 0) {
+                    score++; // Aumenta a pontuação quando um obstáculo passa
+                    return false; // Remove o obstáculo
+                }
+                return true;
+            });
+            coins = coins.filter(coin => coin.x + coinSize < 0); // Remove moedas fora da tela
+            powerUps = powerUps.filter(powerUp => powerUp.x + powerUpSize < 0); // Remove power-ups fora da tela
+
+            // Spawna novos obstáculos, moedas e power-ups (com chance)
+            const currentTime = Date.now();
+            if (currentTime - lastObstacleTime > obstacleSpawnRate) {
+                spawnObstacleAndItems();
+                lastObstacleTime = currentTime;
+            }
+
+            // Verifica colisões
+            checkCollisions();
+            checkCoinCollisions();
+            checkPowerUpCollisions();
+
+            // Atualiza a pontuação e moedas exibidas
+            updateScoreDisplay();
+            updateCoinsDisplay();
+
+            // Aumenta a dificuldade progressivamente
+            increaseDifficulty();
+        }
+
+        function spawnObstacleAndItems() {
+            const gapTop = Math.random() * (obstacleMaxHeight - obstacleMinHeight) + obstacleMinHeight;
+            const gapBottom = gapTop + obstacleGap;
+            obstacles.push({
+                x: canvas.width,
+                gapTop: gapTop,
+                gapBottom: gapBottom
+            });
+
+            // Chance de spawnar uma moeda
+            if (Math.random() < coinSpawnChance) {
+                const coinX = canvas.width + Math.random() * 100; // Um pouco à frente do obstáculo
+                const coinY = Math.random() * (canvas.height - coinSize);
+                coins.push({ x: coinX, y: coinY });
+            }
+
+            // Chance de spawnar um power-up
+            if (Math.random() < powerUpSpawnChance) {
+                const powerUpX = canvas.width + Math.random() * 150; // Um pouco mais à frente
+                const powerUpY = Math.random() * (canvas.height - powerUpSize);
+                powerUps.push({ x: powerUpX, y: powerUpY });
+            }
+        }
+
+        function checkCollisions() {
+            for (let i = 0; i < obstacles.length; i++) {
+                const obstacle = obstacles[i];
+
+                // Colisão entre pássaro e obstáculo
+                const birdLeft = airplane.x - airplane.width / 2;
+                const birdRight = airplane.x + airplane.width / 2;
+                const birdTop = airplane.y - airplane.height / 2;
+                const birdBottom = airplane.y + airplane.height / 2;
+
+                const obstacleLeft = obstacle.x;
+                const obstacleRight = obstacle.x + obstacleWidth;
+                const obstacleTopGap = obstacle.gapTop;
+                const obstacleBottomGap = obstacle.gapBottom;
+
+                // Verifica sobreposição no eixo X
+                if (birdRight > obstacleLeft && birdLeft < obstacleRight) {
+                    // Verifica sobreposição no eixo Y com a parte de cima do obstáculo
+                    if (birdTop < obstacleTopGap) {
+                        gameOver();
+                        return;
+                    }
+                    // Verifica sobreposição no eixo Y com a parte de baixo do obstáculo
+                    if (birdBottom > obstacleBottomGap) {
+                        gameOver();
+                        return;
+                    }
+                }
+            }
+        }
+
+        function checkCoinCollisions() {
+            for (let i = coins.length - 1; i >= 0; i--) {
+                const coin = coins[i];
+
+                // Colisão entre pássaro e moeda
+                const birdCenterX = airplane.x;
+                const birdCenterY = airplane.y;
+                const coinCenterX = coin.x + coinSize / 2;
+                const coinCenterY = coin.y + coinSize / 2;
+
+                const distanceX = birdCenterX - coinCenterX;
+                const distanceY = birdCenterY - coinCenterY;
+                const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
+
+                // Aproximação de colisão circular
+                if (distance < (airplane.width / 2 + coinSize / 2)) {
+                    totalCoins++;
+                    coins.splice(i, 1); // Remove a moeda coletada
+                    updateCoinsDisplay();
+                }
+            }
+        }
+
+        function checkPowerUpCollisions() {
+            for (let i = powerUps.length - 1; i >= 0; i--) {
+                const powerUp = powerUps[i];
+
+                // Colisão entre pássaro e power-up
+                const birdCenterX = airplane.x;
+                const birdCenterY = airplane.y;
+                const powerUpCenterX = powerUp.x + powerUpSize / 2;
+                const powerUpCenterY = powerUp.y + powerUpSize / 2;
+
+                const distanceX = birdCenterX - powerUpCenterX;
+                const distanceY = birdCenterY - powerUpCenterY;
+                const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
+
+                if (distance < (airplane.width / 2 + powerUpSize / 2)) {
+                    activateSpeedBoost();
+                    powerUps.splice(i, 1); // Remove o power-up coletado
+                }
+            }
+        }
+
+        function activateSpeedBoost() {
+            airplane.isSpeedBoosted = true;
+            // Limpa qualquer timer de boost anterior para evitar sobreposição
+            if (airplane.speedBoostTimer) {
+                clearTimeout(airplane.speedBoostTimer);
+            }
+            // Define um novo timer para desativar o boost
+            airplane.speedBoostTimer = setTimeout(() => {
+                airplane.isSpeedBoosted = false;
+                airplane.speedBoostTimer = null;
+            }, speedBoostDuration);
+        }
+
+        function increaseDifficulty() {
+            // Aumenta a velocidade dos obstáculos a cada 10 pontos
+            if (score > 0 && score % 10 === 0 && obstacleSpeed < 10) {
+                obstacleSpeed += 0.5;
+                // Reduz o intervalo de spawn para aumentar a frequência
+                if (obstacleSpawnRate > 500) {
+                    obstacleSpawnRate -= 50;
+                }
+                // Reduz o espaço entre os obstáculos (torna o jogo mais apertado)
+                if (obstacleGap > 100) {
+                    obstacleGap -= 5;
+                }
+            }
+        }
+
+        function gameOver() {
+            gameState = 'gameOver';
+            cancelAnimationFrame(gameLoopId); // Para o loop do jogo
+            showMessageBox(`Fim de Jogo! Pontuação: ${score}<br>Moedas Coletadas: ${totalCoins}`, "Reiniciar", restartGame);
+            // Esconde botões de jogo
+            pauseResumeButton.style.display = 'none';
+        }
+
+        function restartGame() {
+            // Reinicia todas as variáveis do jogo
+            score = 0;
+            totalCoins = 0;
+            airplane.x = 50;
+            airplane.y = canvas.height / 2;
+            airplane.verticalSpeed = 0;
+            airplane.rotation = 0;
+            obstacles = [];
+            coins = [];
+            powerUps = [];
+            lastObstacleTime = 0;
+            obstacleSpeed = 3;
+            obstacleGap = 150;
+            obstacleSpawnRate = 1500;
+            airplane.isSpeedBoosted = false;
+            if (airplane.speedBoostTimer) {
+                clearTimeout(airplane.speedBoostTimer);
+                airplane.speedBoostTimer = null;
+            }
+            hideMessageBox();
+            updateScoreDisplay();
+            updateCoinsDisplay();
+
+            // Volta para a tela de início
+            gameState = 'start';
+            startButton.style.display = 'block';
+            pauseResumeButton.style.display = 'none';
+            draw(); // Desenha a tela inicial limpa
+        }
+
+        function startGame() {
+            gameState = 'playing';
+            startButton.style.display = 'none'; // Esconde o botão de iniciar
+            pauseResumeButton.style.display = 'block'; // Mostra o botão de pausa
+            hideMessageBox(); // Esconde qualquer mensagem inicial
+            gameLoop(); // Inicia o loop do jogo
+        }
+
+        function togglePause() {
+            if (gameState === 'playing') {
+                gameState = 'paused';
+                cancelAnimationFrame(gameLoopId); // Para o loop do jogo
+                showMessageBox("Jogo Pausado!", "Retomar", () => {
+                    gameState = 'playing';
+                    hideMessageBox();
+                    gameLoop(); // Retoma o loop do jogo
+                });
+                pauseResumeButton.textContent = "Retomar";
+            } else if (gameState === 'paused') {
+                gameState = 'playing';
+                hideMessageBox();
+                gameLoop(); // Retoma o loop do jogo
+                pauseResumeButton.textContent = "Pausar";
+            }
+        }
+
+        // --- Event Listeners ---
+        // Controles de teclado (mantidos para desktop)
+        window.addEventListener('keydown', (event) => {
+            keys[event.key] = true;
+            if (event.key.toLowerCase() === 'r') {
+                restartGame();
+            }
+            if (event.key === ' ' || event.key === 'ArrowUp') { // Espaço ou Seta para cima
+                if (gameState === 'playing') {
+                    airplane.verticalSpeed = airplane.flapStrength;
+                } else if (gameState === 'start') {
+                    startGame();
+                }
+            }
+        });
+
+        window.addEventListener('keyup', (event) => {
+            keys[event.key] = false;
+        });
+
+        // Controles de toque para celular (tocar para subir)
+        canvas.addEventListener('touchstart', (event) => {
+            event.preventDefault(); // Previne o comportamento padrão do navegador (ex: scroll, zoom)
+            if (gameState === 'playing') {
+                isTouching = true;
+                airplane.verticalSpeed = airplane.flapStrength; // Aplica a força de subida imediatamente
+            } else if (gameState === 'start') {
+                startGame();
+            }
+        });
+
+        canvas.addEventListener('touchend', () => {
+            isTouching = false;
+        });
+
+        // Event listeners para os novos botões
+        startButton.addEventListener('click', startGame);
+        pauseResumeButton.addEventListener('click', togglePause);
+
+
+        // Responsividade básica (ajusta o canvas ao redimensionar a janela)
+        window.addEventListener('resize', () => {
+            setCanvasSize(); // Ajusta o tamanho do canvas e reposiciona o pássaro
+            draw(); // Redesenha para ajustar a tela
+        });
+
+
+        // --- Loop Principal do Jogo ---
+        function draw() {
+            // Limpa o canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Desenha os elementos (apenas se o jogo não estiver na tela de início)
+            if (gameState !== 'start') {
+                drawBird(); // Desenha o pássaro
+                obstacles.forEach(drawObstacle);
+                coins.forEach(drawCoin); // Desenha as moedas
+                powerUps.forEach(drawPowerUp); // Desenha os power-ups
+            }
+
+            // Se o jogo acabou, a mensagem de fim de jogo é exibida pela showMessageBox
+            // Se o jogo está pausado, a mensagem de pausa é exibida pela showMessageBox
+            // Se o jogo está no início, os botões de início são visíveis
+        }
+
+        function gameLoop() {
+            update(); // Atualiza a lógica do jogo
+            draw();   // Desenha os elementos na tela
+
+            // Continua o loop se o jogo estiver 'playing'
+            if (gameState === 'playing') {
+                 gameLoopId = requestAnimationFrame(gameLoop);
+            }
+        }
+
+        // --- Inicia o Jogo ---
+         window.onload = async function() {
+            await setCanvasSize(); // Ajusta o tamanho inicial do canvas e reposiciona o pássaro, e carrega SVGs
+            // Exibe a mensagem de início do jogo
+            showMessageBox("Bem-vindo ao Pássaro Aventureiro!<br>Toque na tela (ou use Espaço/Seta para Cima) para voar.", "Começar", startGame);
+            startButton.style.display = 'block'; // Garante que o botão "Começar Jogo" esteja visível
+            pauseResumeButton.style.display = 'none'; // Garante que o botão de pausa esteja escondido no início
+            draw(); // Desenha a tela inicial
+        };
+    </script>
+</body>
+</html>

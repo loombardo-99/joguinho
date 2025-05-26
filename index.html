@@ -1,89 +1,203 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grid Page</title>
+    <title>Arcade de Jogos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        /* Define a fonte Inter para todo o corpo da página */
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Inter', sans-serif;
             margin: 0;
             padding: 0;
             display: flex;
-            justify-content: center;
+            flex-direction: column; /* Organiza os elementos em coluna */
             align-items: center;
             min-height: 100vh;
-            background-color: #f4f4f4;
+            background-color: #1a202c; /* Cor de fundo escura para um visual de jogo */
+            color: #e2e8f0; /* Cor do texto clara */
         }
+
+        /* Estilos para o banner de imagens */
+        .banner-container {
+            width: 100%;
+            overflow: hidden; /* Garante que as imagens que saem do contêiner sejam cortadas */
+            position: relative;
+            height: 300px; /* Altura fixa para o banner */
+            margin-bottom: 40px; /* Espaçamento abaixo do banner */
+        }
+
+        .banner-images {
+            display: flex;
+            transition: transform 0.5s ease-in-out; /* Transição suave para o slide */
+            height: 100%;
+        }
+
+        .banner-images img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Garante que a imagem cubra o espaço sem distorcer */
+            border-radius: 12px; /* Cantos arredondados para as imagens do banner */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4); /* Sombra para destaque */
+        }
+
+        /* Estilos para o contêiner dos jogos */
         .grid-container {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Colunas responsivas */
+            gap: 24px; /* Espaçamento entre os itens da grade */
             padding: 20px;
             max-width: 1200px;
             width: 100%;
         }
+
+        /* Estilos para cada item (jogo) na grade */
         .grid-item {
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background: #2d3748; /* Cor de fundo para os itens */
+            border: 1px solid #4a5568; /* Borda sutil */
+            border-radius: 12px; /* Cantos arredondados */
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); /* Sombra mais pronunciada */
             text-align: center;
-            padding: 15px;
+            padding: 20px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease; /* Transições para hover */
         }
+
+        .grid-item:hover {
+            transform: translateY(-8px); /* Efeito de elevação ao passar o mouse */
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.5); /* Sombra mais intensa no hover */
+        }
+
         .grid-item img {
             max-width: 100%;
-            border-radius: 8px;
+            height: 180px; /* Altura fixa para as imagens dos jogos */
+            object-fit: cover; /* Garante que a imagem cubra o espaço */
+            border-radius: 8px; /* Cantos arredondados para as imagens dos jogos */
+            margin-bottom: 15px; /* Espaçamento abaixo da imagem */
         }
+
         .grid-item h3 {
             margin: 10px 0;
-            font-size: 1.2em;
+            font-size: 1.4em;
+            color: #63b3ed; /* Cor do título para destaque */
         }
+
         .grid-item p {
-            font-size: 0.9em;
-            color: #555;
+            font-size: 1em;
+            color: #cbd5e0; /* Cor do parágrafo */
+            min-height: 40px; /* Altura mínima para o parágrafo */
         }
+
         .grid-item button {
-            margin-top: 10px;
-            padding: 10px 20px;
-            background-color: #007BFF;
+            margin-top: 20px;
+            padding: 12px 25px;
+            background-color: #4299e1; /* Cor do botão */
             color: #fff;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px; /* Cantos arredondados para o botão */
             cursor: pointer;
-            font-size: 1em;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: background-color 0.3s ease, transform 0.2s ease; /* Transições para hover */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Sombra para o botão */
         }
+
         .grid-item button:hover {
-            background-color: #0056b3;
+            background-color: #3182ce; /* Cor do botão no hover */
+            transform: translateY(-2px); /* Efeito de elevação no botão */
+        }
+
+        /* Media queries para responsividade */
+        @media (max-width: 768px) {
+            .grid-container {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            }
+            .banner-container {
+                height: 200px; /* Altura menor para o banner em telas menores */
+            }
+        }
+
+        @media (max-width: 480px) {
+            .grid-container {
+                grid-template-columns: 1fr; /* Uma coluna em telas muito pequenas */
+                padding: 15px;
+            }
+            .grid-item {
+                padding: 15px;
+            }
+            .banner-container {
+                height: 150px; /* Altura ainda menor para o banner */
+            }
         }
     </style>
 </head>
 <body>
-    <div class="grid-container">
-        <div class="grid-item">
-            <img src="midia/snake-6.jpg" alt="Image 1">
-            <h3>SNAKE GAME</h3>
-            <p>jogo desenvolvido em html, css e javascrip</p>
-            <button onclick="window.location.href='snake.html'">Play</button>
-        </div>
-        <div class="grid-item">
-            <img src="midia/cacapalavra.jpg" alt="Image 2">
-            <h3>Caça-Palavras</h3>
-            <p>jogo desenvolvido em html, css e javascript</p>
-            <button onclick="window.location.href='caca-palavras.html'">Play</button>
-        </div>
-        <div class="grid-item">
-            <img src="midia/jogo-3.jpg" alt="Image 3">
-            <h3>Jogo-da-Velha</h3>
-            <p>jogo desenvolvido em html, css e javascript</p>
-            <button onclick="window.location.href='jogo-da-velha.html'">Play</button>
-        </div>
-        <div class="grid-item">
-            <img src="midia/pacman.jpg" alt="Image 3">
-            <h3>Pac-man</h3>
-            <p>jogo desenvolvido em html, css e javascript</p>
-            <button onclick="window.location.href='pacman.html'">Play</button>
+    <div class="banner-container">
+        <div class="banner-images" id="bannerImages">
+            <img src="https://placehold.co/1200x300/007BFF/ffffff?text=Bem+Vindo+ao+Arcade" alt="Banner Image 1">
+            <img src="https://placehold.co/1200x300/FF5733/ffffff?text=Explore+Nossos+Jogos" alt="Banner Image 2">
+            <img src="https://placehold.co/1200x300/33FF57/ffffff?text=Divirta-se+Agora!" alt="Banner Image 3">
         </div>
     </div>
+
+    <div class="grid-container">
+        <div class="grid-item">
+            <img src="midia/snake-1.jpg" alt="Imagem do jogo Snake">
+            <h3>SNAKE GAME</h3>
+            <p>Um clássico jogo da cobrinha desenvolvido em HTML, CSS e JavaScript. Desafie seus reflexos!</p>
+            <button onclick="window.location.href='snake.html'">Jogar</button>
+        </div>
+
+        <div class="grid-item">
+            <img src="midia/cacapalavra.jpg" alt="Imagem do jogo Caça-Palavras">
+            <h3>Caça-Palavras</h3>
+            <p>Teste seu vocabulário e agilidade mental neste divertido jogo de caça-palavras.</p>
+            <button onclick="window.location.href='caca-palavras.html'">Jogar</button>
+        </div>
+
+        <div class="grid-item">
+            <img src="" alt="Imagem do jogo Jogo-da-Velha">
+            <h3>Jogo-da-Velha</h3>
+            <p>O tradicional jogo da velha para desafiar um amigo ou o computador. Quem será o vencedor?</p>
+            <button onclick="window.location.href='jogo-da-velha.html'">Jogar</button>
+        </div>
+
+        <div class="grid-item">
+            <img src="midia/pacman.jpg" alt="Imagem do jogo Pac-Man">
+            <h3>Pac-Man</h3>
+            <p>Reviva a nostalgia com o lendário Pac-Man! Fuja dos fantasmas e colete todas as pastilhas.</p>
+            <button onclick="window.location.href='pacman.html'">Jogar</button>
+        </div>
+
+        <div class="grid-item">
+            <img src="" alt="Imagem do jogo Avião">
+            <h3>Avião</h3>
+            <p>Reviva a nostalgia com o lendário Avião! Fuja dos fantasmas e colete todas as pastilhas.</p>
+            <button onclick="window.location.href='aviao.html'">Jogar</button>
+        </div>
+
+          <div class="grid-item">
+            <img src="https://placehold.co/400x250/000000/ffffff?text=PAC-MAN" alt="Imagem do jogo Pac-Man">
+            <h3>Ping-Pong</h3>
+            <p>Reviva a nostalgia com o lendário Ping-Pong! Desafie um amigo para ver quem é o melhor.</p>
+            <button onclick="window.location.href='ping-pong.html'">Jogar</button>
+        </div>
+    </div>
+
+    <script>
+        // Script para o banner de imagens com transição automática
+        const bannerImages = document.getElementById('bannerImages');
+        const images = bannerImages.children;
+        let currentIndex = 0;
+
+        function slideBanner() {
+            currentIndex = (currentIndex + 1) % images.length;
+            const offset = -currentIndex * 100; // Calcula o deslocamento para a próxima imagem
+            bannerImages.style.transform = `translateX(${offset}%)`; // Aplica a transição
+        }
+
+        // Inicia a transição automática a cada 3 segundos
+        setInterval(slideBanner, 3000);
+    </script>
 </body>
 </html>

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo de Ping Pong</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #222;
+            margin: 0;
+            font-family: sans-serif;
+            color: white;
+            flex-direction: column; /* Para centralizar o placar e o canvas */
+        }
+
+        canvas {
+            background-color: #000;
+            border: 2px solid white;
+            display: block; /* Remove espaço extra abaixo do canvas */
+            margin-top: 20px; /* Espaço entre o placar e o canvas */
+        }
+
+        #score {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="score">Jogador 1: 0 | Jogador 2: 0</div>
+    <canvas id="pingPongCanvas" width="600" height="400"></canvas>
+
+    <script>
+        // Obtém o canvas e o contexto 2D
+        const canvas = document.getElementById('pingPongCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Dimensões do canvas
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
+
+        // Configurações da raquete
+        const paddleWidth = 10;
+        const paddleHeight = 80;
+        const paddleSpeed = 6; // Velocidade da raquete do computador
+
+        // Posições iniciais das raquetes
+        let player1Y = (canvasHeight - paddleHeight) / 2;
+        let player2Y = (canvasHeight - paddleHeight) / 2;
+
+        // Configurações da bola
+        const ballSize = 10;
+        let ballX = canvasWidth / 2;
+        let ballY = canvasHeight / 2;
+        let ballSpeedX = 5; // Velocidade inicial da bola no eixo X
+        let ballSpeedY = 5; // Velocidade inicial da bola no eixo Y
+
+        // Pontuação
+        let player1Score = 0;
+        let player2Score = 0;
+        const scoreDisplay = document.getElementById('score');
+
+        // Variável para controlar o movimento da raquete do jogador 1 (mouse)
+        let mousePos = { x: 0, y: 0 };
+
+        // Desenha um retângulo (usado para raquetes e bola)
+        function drawRect(x, y, width, height, color) {
+            ctx.fillStyle = color;
+            ctx.fillRect(x, y, width, height);
+        }
+
+        // Desenha a quadra
+        function drawCourt() {
+            // Fundo
+            drawRect(0, 0, canvasWidth, canvasHeight, '#000');
+
+            // Linha central tracejada
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([10, 10]); // Define o padrão tracejado
+            ctx.beginPath();
+            ctx.moveTo(canvasWidth / 2, 0);
+            ctx.lineTo(canvasWidth / 2, canvasHeight);
+            ctx.stroke();
+            ctx.setLineDash([]); // Reseta o padrão de linha
+        }
+
+        // Desenha as raquetes
+        function drawPaddles() {
+            // Raquete do Jogador 1 (esquerda)
+            drawRect(0, player1Y, paddleWidth, paddleHeight, 'white');
+
+            // Raquete do Jogador 2 (direita)
+            drawRect(canvasWidth - paddleWidth, player2Y, paddleWidth, paddleHeight, 'white');
+        }
+
+        // Desenha a bola
+        function drawBall() {
+            drawRect(ballX - ballSize / 2, ballY - ballSize / 2, ballSize, ballSize, 'white');
+        }
+
+        // Atualiza a posição da bola
+        function moveBall() {
+            ballX += ballSpeedX;
+            ballY += ballSpeedY;
+
+            // Colisão com as bordas superior e inferior
+            if (ballY - ballSize / 2 < 0 || ballY + ballSize / 2 > canvasHeight) {
+                ballSpeedY *= -1; // Inverte a direção Y
+            }
+
+            // Colisão com as raquetes
+            // Raquete do Jogador 1 (esquerda)
+            if (ballX - ballSize / 2 < paddleWidth &&
+                ballY > player1Y &&
+                ballY < player1Y + paddleHeight) {
+                ballSpeedX *= -1; // Inverte a direção X
+                // Ajusta a velocidade Y com base onde a bola bateu na raquete
+                let deltaY = ballY - (player1Y + paddleHeight / 2);
+                ballSpeedY = deltaY * 0.3; // Ajuste o multiplicador para mudar a sensibilidade
+            }
+
+            // Raquete do Jogador 2 (direita)
+            if (ballX + ballSize / 2 > canvasWidth - paddleWidth &&
+                ballY > player2Y &&
+                ballY < player2Y + paddleHeight) {
+                ballSpeedX *= -1; // Inverte a direção X
+                 // Ajusta a velocidade Y com base onde a bola bateu na raquete
+                let deltaY = ballY - (player2Y + paddleHeight / 2);
+                ballSpeedY = deltaY * 0.3; // Ajuste o multiplicador para mudar a sensibilidade
+            }
+
+            // Ponto para o Jogador 2 (bola saiu pela esquerda)
+            if (ballX - ballSize / 2 < 0) {
+                player2Score++;
+                updateScore();
+                resetBall(); // Reinicia a bola
+            }
+
+            // Ponto para o Jogador 1 (bola saiu pela direita)
+            if (ballX + ballSize / 2 > canvasWidth) {
+                player1Score++;
+                updateScore();
+                resetBall(); // Reinicia a bola
+            }
+        }
+
+        // Reinicia a posição da bola no centro
+        function resetBall() {
+            ballX = canvasWidth / 2;
+            ballY = canvasHeight / 2;
+            // Inverte a direção X da bola após um ponto para alternar o saque
+            ballSpeedX *= -1;
+            // Reseta a velocidade Y para um valor padrão ou aleatório se preferir
+            ballSpeedY = 5 * (Math.random() > 0.5 ? 1 : -1); // Velocidade Y aleatória
+        }
+
+        // Atualiza a posição da raquete do jogador 1 com o mouse
+        canvas.addEventListener('mousemove', function(event) {
+            // Obtém a posição do mouse em relação ao canvas
+            const rect = canvas.getBoundingClientRect();
+            mousePos.y = event.clientY - rect.top;
+
+            // Limita o movimento da raquete dentro do canvas
+            player1Y = mousePos.y - paddleHeight / 2;
+            if (player1Y < 0) {
+                player1Y = 0;
+            }
+            if (player1Y > canvasHeight - paddleHeight) {
+                player1Y = canvasHeight - paddleHeight;
+            }
+        });
+
+        // Movimento da raquete do Jogador 2 (IA simples)
+        function movePlayer2Paddle() {
+            // Move a raquete em direção à bola
+            if (player2Y + paddleHeight / 2 < ballY - 35) { // Adiciona um offset para a IA não ser perfeita
+                player2Y += paddleSpeed;
+            } else if (player2Y + paddleHeight / 2 > ballY + 35) { // Adiciona um offset
+                player2Y -= paddleSpeed;
+            }
+
+            // Limita o movimento da raquete dentro do canvas
+             if (player2Y < 0) {
+                player2Y = 0;
+            }
+            if (player2Y > canvasHeight - paddleHeight) {
+                player2Y = canvasHeight - paddleHeight;
+            }
+        }
+
+        // Atualiza a exibição da pontuação
+        function updateScore() {
+            scoreDisplay.textContent = `Jogador 1: ${player1Score} | Jogador 2: ${player2Score}`;
+        }
+
+        // Loop principal do jogo
+        function gameLoop() {
+            // Atualiza a lógica do jogo
+            moveBall();
+            movePlayer2Paddle();
+
+            // Desenha os elementos na tela
+            drawCourt();
+            drawPaddles();
+            drawBall();
+
+            // Chama a próxima iteração do loop
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Inicia o jogo quando a página carregar
+        window.onload = function() {
+            gameLoop();
+        };
+
+    </script>
+</body>
+</html>
+</script>
